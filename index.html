@@ -18,7 +18,18 @@
       <h1>Rock Paper<br/>Scissors</h1>
       <p class="tagline">Enter your name to begin</p>
       <input type="text" id="nameInput" placeholder="Your name..." maxlength="20"/>
-      <button class="btn-primary" onclick="startGame()">Let's Play!</button>
+
+      <div class="round-select">
+        <p class="round-label">Choose Rounds</p>
+        <div class="round-btns">
+          <button class="round-opt active" onclick="selectRounds(3, this)">3</button>
+          <button class="round-opt" onclick="selectRounds(5, this)">5</button>
+          <button class="round-opt" onclick="selectRounds(7, this)">7</button>
+          <button class="round-opt" onclick="selectRounds(10, this)">10</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="startGame()">🎮 Let's Play!</button>
       <button class="btn-ghost" onclick="showScreen('screenBoard')">🏆 Scoreboard</button>
     </div>
   </div>
@@ -32,6 +43,15 @@
     </div>
 
     <div class="game-wrap">
+
+      <!-- Round Counter -->
+      <div class="round-counter" id="roundCounter">Round 1 of 5</div>
+
+      <!-- Round Progress Bar -->
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
       <div class="session-scores">
         <div class="ss-box win-box">
           <div class="ss-num" id="sessWins">0</div>
@@ -61,21 +81,22 @@
         </div>
       </div>
 
-      <div class="result-strip" id="resultStrip">
-        <span id="resultText">Choose your weapon!</span>
+      <div class="result-strip" id="resultStrip">Choose your weapon!</div>
+
+      <div class="weapons" id="weaponBtns">
+        <button class="weapon rock"     onclick="play('rock')"><span>✊</span><small>Rock</small></button>
+        <button class="weapon paper"    onclick="play('paper')"><span>✋</span><small>Paper</small></button>
+        <button class="weapon scissors" onclick="play('scissors')"><span>✌️</span><small>Scissors</small></button>
       </div>
 
-      <div class="weapons">
-        <button class="weapon rock"     onclick="play('rock')">
-          <span>✊</span><small>Rock</small>
-        </button>
-        <button class="weapon paper"    onclick="play('paper')">
-          <span>✋</span><small>Paper</small>
-        </button>
-        <button class="weapon scissors" onclick="play('scissors')">
-          <span>✌️</span><small>Scissors</small>
-        </button>
-      </div>
+      <!-- Play Again (hidden until game over) -->
+      <button class="btn-primary" id="playAgainBtn" onclick="playAgain()" style="display:none;">
+        🔄 Play Again
+      </button>
+      <button class="btn-ghost" id="homeAfterBtn" onclick="goHome()" style="display:none;">
+        🏠 Change Player
+      </button>
+
     </div>
   </div>
 
@@ -91,9 +112,7 @@
     </div>
   </div>
 
-  <!-- Confetti container -->
   <div id="confetti"></div>
-
   <script src="game.js"></script>
 </body>
 </html>
