@@ -42,7 +42,7 @@ function drawBg() {
 }
 drawBg();
 
-// ── Score Persistence (localStorage) ──
+// ── Score Persistence ──
 function loadScores() {
   return JSON.parse(localStorage.getItem('rps_scores') || '{}');
 }
@@ -62,8 +62,11 @@ const EMOJI   = { rock:'✊', paper:'✋', scissors:'✌️' };
 const BEATS   = { rock:'scissors', scissors:'paper', paper:'rock' };
 const OPTIONS = ['rock','paper','scissors'];
 
+const MAX_ROUNDS = 5; // 🔴 Game stops after 5 rounds
 let currentPlayer = '';
 let session = { wins:0, losses:0, draws:0 };
+let roundsPlayed = 0;
+let gameOver = false;
 
 function startGame() {
   const name = document.getElementById('nameInput').value.trim();
@@ -74,6 +77,8 @@ function startGame() {
   }
   currentPlayer = name;
   session = { wins:0, losses:0, draws:0 };
+  roundsPlayed = 0;
+  gameOver = false;
 
   document.getElementById('currentPlayerTag').textContent = '👤 ' + name;
   document.getElementById('sessWins').textContent   = 0;
@@ -83,6 +88,12 @@ function startGame() {
   document.getElementById('cpuEmoji').textContent   = '🤖';
   document.getElementById('youName').textContent    = '—';
   document.getElementById('cpuName').textContent    = '—';
+
+  // Show round counter
+  document.getElementById('roundCounter').textContent = `Round 1 of ${MAX_ROUNDS}`;
+
+  // Enable weapon buttons
+  setButtonsDisabled(false);
 
   const strip = document.getElementById('resultStrip');
   strip.textContent = 'Choose your weapon!';
@@ -96,12 +107,81 @@ function goHome() {
   showScreen('screenName');
 }
 
+// ── Disable/Enable weapon buttons ──
+function setButtonsDisabled(disabled) {
+  document.querySelectorAll('.weapon').forEach(btn => {
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? '0.4' : '1';
+    btn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
+  });
+}
+
+// ── Game Over Screen ──
+function showGameOver() {
+  gameOver = true;
+  setButtonsDisabled(true);
+
+  const scores = loadScores();
+  if (!scores[currentPlayer]) scores[currentPlayer] = { wins:0, losses:0, draws:0 };
+  scores[currentPlayer].wins   += session.wins;
+  scores[currentPlayer].losses += session.losses;
+  scores[currentPlayer].draws  += session.draws;
+  saveScores(scores);
+
+  let finalMsg = '';
+  if (session.wins > session.losses) {
+    finalMsg = `🏆 You Won the Match! (${session.wins}W - ${session.losses}L)`;
+    spawnConfetti();
+  } else if (session.losses > session.wins) {
+    finalMsg = `😔 CPU Won the Match! (${session.wins}W - ${session.losses}L)`;
+  } else {
+    finalMsg = `🤝 Match Draw! (${session.wins}W - ${session.losses}L)`;
+  }
+
+  const strip = document.getElementById('resultStrip');
+  strip.textContent = `GAME OVER! ${finalMsg}`;
+  strip.className   = session.wins > session.losses
+    ? 'result-strip show WIN'
+    : session.losses > session.wins
+    ? 'result-strip show LOSE'
+    : 'result-strip show DRAW';
+
+  document.getElementById('roundCounter').textContent = '🎮 Game Over!';
+
+  // Show play again button
+  document.getElementById('playAgainBtn').style.display = 'block';
+}
+
+function playAgain() {
+  session = { wins:0, losses:0, draws:0 };
+  roundsPlayed = 0;
+  gameOver = false;
+
+  document.getElementById('sessWins').textContent   = 0;
+  document.getElementById('sessLosses').textContent = 0;
+  document.getElementById('sessDraws').textContent  = 0;
+  document.getElementById('youEmoji').textContent   = '❓';
+  document.getElementById('cpuEmoji').textContent   = '🤖';
+  document.getElementById('youName').textContent    = '—';
+  document.getElementById('cpuName').textContent    = '—';
+  document.getElementById('roundCounter').textContent = `Round 1 of ${MAX_ROUNDS}`;
+  document.getElementById('playAgainBtn').style.display = 'none';
+
+  setButtonsDisabled(false);
+
+  const strip = document.getElementById('resultStrip');
+  strip.textContent = 'Choose your weapon!';
+  strip.className   = 'result-strip DRAW show';
+}
+
 // ── Core Play Function ──
 function play(playerChoice) {
-  const cpuChoice = OPTIONS[Math.floor(Math.random() * 3)];
+  if (gameOver) return;
 
+  const cpuChoice = OPTIONS[Math.floor(Math.random() * 3)];
   document.getElementById('cpuEmoji').textContent = '🤔';
   document.getElementById('cpuName').textContent  = '...';
+  setButtonsDisabled(true);
 
   setTimeout(() => {
     document.getElementById('youEmoji').textContent = EMOJI[playerChoice];
@@ -109,23 +189,19 @@ function play(playerChoice) {
     document.getElementById('cpuEmoji').textContent = EMOJI[cpuChoice];
     document.getElementById('cpuName').textContent  = cap(cpuChoice);
 
-    const scores = loadScores();
-    if (!scores[currentPlayer]) scores[currentPlayer] = { wins:0, losses:0, draws:0 };
-
-    let msg, cls, sessKey, scoreKey;
+    let msg, cls, sessKey;
 
     if (playerChoice === cpuChoice) {
-      msg = "🤝 It's a Draw!"; cls = 'DRAW'; sessKey = 'draws'; scoreKey = 'draws';
+      msg = "🤝 Draw!"; cls = 'DRAW'; sessKey = 'draws';
     } else if (BEATS[playerChoice] === cpuChoice) {
-      msg = '🎉 You Win!'; cls = 'WIN'; sessKey = 'wins'; scoreKey = 'wins';
+      msg = '🎉 You Win!'; cls = 'WIN'; sessKey = 'wins';
       spawnConfetti();
     } else {
-      msg = '💀 You Lose!'; cls = 'LOSE'; sessKey = 'losses'; scoreKey = 'losses';
+      msg = '💀 You Lose!'; cls = 'LOSE'; sessKey = 'losses';
     }
 
     session[sessKey]++;
-    scores[currentPlayer][scoreKey]++;
-    saveScores(scores);
+    roundsPlayed++;
 
     pop('sessWins',   session.wins);
     pop('sessLosses', session.losses);
@@ -136,6 +212,17 @@ function play(playerChoice) {
     strip.textContent = msg;
     void strip.offsetWidth;
     strip.className = `result-strip show ${cls}`;
+
+    // Update round counter
+    if (roundsPlayed < MAX_ROUNDS) {
+      document.getElementById('roundCounter').textContent =
+        `Round ${roundsPlayed + 1} of ${MAX_ROUNDS}`;
+      setButtonsDisabled(false);
+    } else {
+      // Game over after MAX_ROUNDS
+      setTimeout(() => showGameOver(), 800);
+    }
+
   }, 380);
 }
 
@@ -158,7 +245,6 @@ function renderBoard() {
     return;
   }
 
-  // Sort by wins desc
   entries.sort((a,b) => b[1].wins - a[1].wins);
 
   const rankIcon = ['🥇','🥈','🥉'];
@@ -166,8 +252,7 @@ function renderBoard() {
 
   let html = `
     <div class="board-row header">
-      <div></div>
-      <div>Player</div>
+      <div></div><div>Player</div>
       <div class="stat">Wins</div>
       <div class="stat">Losses</div>
       <div class="stat">Draws</div>
@@ -176,8 +261,8 @@ function renderBoard() {
 
   entries.forEach(([name, s], i) => {
     const total = s.wins + s.losses + s.draws;
-    const rk    = i < 3 ? rankIcon[i] : i + 1;
-    const rc    = i < 3 ? rankCls[i]  : '';
+    const rk = i < 3 ? rankIcon[i] : i + 1;
+    const rc = i < 3 ? rankCls[i]  : '';
     html += `
       <div class="board-row">
         <div class="rank ${rc}">${rk}</div>
@@ -222,7 +307,6 @@ function spawnConfetti() {
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-// Enter key support
 document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') startGame();
 });
