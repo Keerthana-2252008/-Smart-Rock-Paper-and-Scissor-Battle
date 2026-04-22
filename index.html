@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rock Paper Scissors</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <canvas id="bg"></canvas>
+
+  <!-- SCREEN 1: Enter Name -->
+  <div class="screen" id="screenName">
+    <div class="card name-card">
+      <div class="logo">✊✋✌️</div>
+      <h1>Rock Paper<br/>Scissors</h1>
+      <p class="tagline">Enter your name to begin</p>
+      <input type="text" id="nameInput" placeholder="Your name..." maxlength="20"/>
+      <button class="btn-primary" onclick="startGame()">Let's Play!</button>
+      <button class="btn-ghost" onclick="showScreen('screenBoard')">🏆 Scoreboard</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Game -->
+  <div class="screen hidden" id="screenGame">
+    <div class="topbar">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <span class="player-tag" id="currentPlayerTag"></span>
+      <button class="board-btn" onclick="showScreen('screenBoard')">🏆</button>
+    </div>
+
+    <div class="game-wrap">
+      <div class="session-scores">
+        <div class="ss-box win-box">
+          <div class="ss-num" id="sessWins">0</div>
+          <div class="ss-lbl">Wins</div>
+        </div>
+        <div class="ss-box draw-box">
+          <div class="ss-num" id="sessDraws">0</div>
+          <div class="ss-lbl">Draws</div>
+        </div>
+        <div class="ss-box lose-box">
+          <div class="ss-num" id="sessLosses">0</div>
+          <div class="ss-lbl">Losses</div>
+        </div>
+      </div>
+
+      <div class="arena">
+        <div class="fighter you-side">
+          <div class="fighter-emoji" id="youEmoji">❓</div>
+          <div class="fighter-label">You</div>
+          <div class="fighter-name" id="youName">—</div>
+        </div>
+        <div class="vs-ring">VS</div>
+        <div class="fighter cpu-side">
+          <div class="fighter-emoji" id="cpuEmoji">🤖</div>
+          <div class="fighter-label">CPU</div>
+          <div class="fighter-name" id="cpuName">—</div>
+        </div>
+      </div>
+
+      <div class="result-strip" id="resultStrip">
+        <span id="resultText">Choose your weapon!</span>
+      </div>
+
+      <div class="weapons">
+        <button class="weapon rock"     onclick="play('rock')">
+          <span>✊</span><small>Rock</small>
+        </button>
+        <button class="weapon paper"    onclick="play('paper')">
+          <span>✋</span><small>Paper</small>
+        </button>
+        <button class="weapon scissors" onclick="play('scissors')">
+          <span>✌️</span><small>Scissors</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Scoreboard -->
+  <div class="screen hidden" id="screenBoard">
+    <div class="board-wrap">
+      <div class="board-header">
+        <button class="back-btn" onclick="goHome()">← Home</button>
+        <h2>🏆 Scoreboard</h2>
+        <button class="reset-all-btn" onclick="resetAll()">🗑 Reset</button>
+      </div>
+      <div id="boardTable"></div>
+    </div>
+  </div>
+
+  <!-- Confetti container -->
+  <div id="confetti"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
